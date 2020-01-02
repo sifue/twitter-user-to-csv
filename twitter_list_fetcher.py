@@ -22,22 +22,28 @@ auth = twitter.OAuth(consumer_key=os.environ["CONSUMER_KEY"],
 
 t = twitter.Twitter(auth=auth)
 
-# Get the members of tamtar's list "Things That Are Rad"
-r = t.lists.members(owner_screen_name=args[1], slug=args[2], count=5000)
+cursor = -1
 
-contexts = {}
+while cursor != 0:
+    r = t.lists.members(owner_screen_name=args[1], slug=args[2], count=5000, cursor=cursor)
 
-for user in r["users"]:
-    contexts[user["id_str"]] = {
-        "name" : user["name"],
-        "screen_name": user["screen_name"],
-        "location" : user["location"],
-        "description": user["description"]
-        }
+    contexts = {}
 
-with open(args[3], "a") as f:
-    writer = csv.writer(f)
-    for context in contexts.values():
-        writer.writerow([str(context), args[4]])
+    for user in r["users"]:
+        contexts[user["id_str"]] = {
+            "name" : user["name"],
+            "screen_name": user["screen_name"],
+            "location" : user["location"],
+            "description": user["description"]
+            }
+
+    with open(args[3], "a") as f:
+        writer = csv.writer(f)
+        for context in contexts.values():
+            writer.writerow([str(context), args[4]])
+    
+    print("next_cursor:")
+    print(r["next_cursor"])
+    cursor = r["next_cursor"]
 
 print("Finished.")
